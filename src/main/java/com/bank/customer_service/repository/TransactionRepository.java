@@ -11,9 +11,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByCustomer(Customer customer);
 
+    List<Transaction> findByCustomer_Username(String username);
+
+
     @Query("SELECT COALESCE(SUM(t.credit), 0) FROM Transaction t WHERE t.customer.id = :customerId")
     Double getTotalCredit(Long customerId);
 
     @Query("SELECT COALESCE(SUM(t.debit), 0) FROM Transaction t WHERE t.customer.id = :customerId")
     Double getTotalDebit(Long customerId);
+
+
 }

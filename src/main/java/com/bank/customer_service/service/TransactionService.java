@@ -2,6 +2,7 @@ package com.bank.customer_service.service;
 
 import com.bank.customer_service.dto.CreditRequestDTO;
 import com.bank.customer_service.dto.DebitRequestDTO;
+import com.bank.customer_service.dto.TransactionResponseDTO;
 import com.bank.customer_service.dto.TransferRequestDTO;
 import com.bank.customer_service.entity.Customer;
 import com.bank.customer_service.entity.Transaction;
@@ -73,44 +74,6 @@ public class TransactionService {
         return "Amount debited successfully";
     }
 
-//    @Transactional
-//    public String transfer(TransferRequestDTO dto) {
-//        Customer fromCustomer = customerRepository.findById(dto.getFromCustomerId())
-//                .orElseThrow(() -> new RuntimeException("Sender not found"));
-//
-//        Customer toCustomer = customerRepository.findById(dto.getToCustomerId())
-//                .orElseThrow(() -> new RuntimeException("Receiver not found"));
-//
-//        if (fromCustomer.getBalance() < dto.getAmount()) {
-//            throw new RuntimeException("Insufficient balance");
-//        }
-//
-//        fromCustomer.setBalance(fromCustomer.getBalance() - dto.getAmount());
-//        toCustomer.setBalance(toCustomer.getBalance() + dto.getAmount());
-//
-//        customerRepository.save(fromCustomer);
-//        customerRepository.save(toCustomer);
-//
-//        Transaction debitTx = new Transaction();
-//        debitTx.setCustomer(fromCustomer);
-//        debitTx.setDebit(dto.getAmount());
-//        debitTx.setType("DEBIT");
-//        debitTx.setTimestamp(LocalDateTime.now());
-//        transactionRepository.save(debitTx);
-//
-//        Transaction creditTx = new Transaction();
-//        creditTx.setCustomer(toCustomer);
-//        creditTx.setCredit(dto.getAmount());
-//        creditTx.setType("CREDIT");
-//        creditTx.setTimestamp(LocalDateTime.now());
-//        creditTx.setRefTransaction(debitTx);
-//        transactionRepository.save(creditTx);
-//
-//        TransactionEventDTO event = new TransactionEventDTO("TRANSFER", fromCustomer.getAccountNumber(), dto.getAmount(), LocalDateTime.now().toString());
-//        kafkaProducer.sendTransactionEvent(event);
-//
-//        return "Transfer successful";
-//    }
 
     @Transactional
     public String transfer(TransferRequestDTO dto) {
@@ -172,9 +135,21 @@ public class TransactionService {
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
     }
 
-    public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
+    public List<TransactionResponseDTO> getAllTransactions() {
+        return transactionRepository.findAll()
+                .stream()
+                .map(tx -> new TransactionResponseDTO(
+                        tx.getId(),
+                        tx.getType(),
+                        tx.getCredit(),
+                        tx.getDebit(),
+                        tx.getTimestamp(),
+                        tx.getCustomer() != null ? tx.getCustomer().getId() : null,
+                        tx.getCustomer() != null ? tx.getCustomer().getUsername() : null
+                ))
+                .toList();
     }
+
 
     @Transactional
     public void deleteTransaction(Long id) {
@@ -183,4 +158,9 @@ public class TransactionService {
         }
         transactionRepository.deleteById(id);
     }
+
+    public List<Transaction> getTransactionsByUsername(String username) {
+        return transactionRepository.findByCustomer_Username(username);
+    }
+
 }

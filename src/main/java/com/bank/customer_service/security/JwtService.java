@@ -3,6 +3,7 @@ package com.bank.customer_service.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,8 @@ import java.util.function.Function;
 @Component
 public class JwtService {
 
-    public static final String SECRET = "5367566859703373367639792F423F452848284D6251655468576D5A71347437";
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
 
     public String generateToken(String username) {
         return Jwts.builder()
@@ -41,13 +43,26 @@ public class JwtService {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    public boolean validateToken(String token, UserDetails userDetails) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String username = claims.getSubject();
+
+            // ✅ Just check username matches and token is not expired
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
+
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
+
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
 }

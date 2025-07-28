@@ -14,4 +14,7 @@ public interface CustomerService {
     CustomerResponseDTO createCustomer(Customer customer);
     CustomerResponseDTO updateCustomer(Long id, Customer customer);
     void deleteCustomer(Long id);
+    CustomerResponseDTO updateMyProfile(String username, Customer updatedCustomer);
+    CustomerResponseDTO getMyProfile(String username);
+
 }

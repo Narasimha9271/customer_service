@@ -51,4 +51,5 @@ public class Customer {
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<Transaction> transactions;
+    private String role = "CUSTOMER";
 }

@@ -101,6 +101,33 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.deleteById(id);
     }
 
+    @Override
+    public CustomerResponseDTO updateMyProfile(String username, Customer updatedCustomer) {
+        Customer existing = customerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        // Allow updating only safe fields (NOT username or role)
+        existing.setEmail(updatedCustomer.getEmail());
+
+        // Update password only if provided
+        if (updatedCustomer.getPassword() != null && !updatedCustomer.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(updatedCustomer.getPassword()));
+        }
+
+        Customer saved = customerRepository.save(existing);
+        return mapToDTO(saved);
+    }
+
+    @Override
+    public CustomerResponseDTO getMyProfile(String username) {
+        Customer customer = customerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        return mapToDTO(customer);
+    }
+
+
+
+
     private CustomerResponseDTO mapToDTO(Customer customer) {
         CustomerResponseDTO dto = new CustomerResponseDTO();
         dto.setId(customer.getId());

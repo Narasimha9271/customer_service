@@ -19,7 +19,7 @@ public class Transaction {
     @Column(nullable = false)
     private String type; // CREDIT or DEBIT
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 

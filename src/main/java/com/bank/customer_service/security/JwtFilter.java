@@ -4,6 +4,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -24,6 +24,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
@@ -34,7 +35,24 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            // ✅ Extract role from token
+            String role = jwtService.extractRole(token);
+
+            UserDetails userDetails;
+
+            if ("ADMIN".equals(role)) {
+                // ✅ If ADMIN, skip DB lookup and create a dummy admin user
+                userDetails = User.builder()
+                        .username(username)
+                        .password("") // no password check needed here
+                        .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                        .build();
+            } else {
+                // ✅ If CUSTOMER, load user from DB
+                userDetails = userDetailsService.loadUserByUsername(username);
+            }
+
+            // ✅ Validate token
             if (jwtService.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -49,6 +67,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.equals("/auth/login") || path.equals("/auth/register");
+        return path.startsWith("/auth/");
     }
 }
