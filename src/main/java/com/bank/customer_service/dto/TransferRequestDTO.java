@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class TransferRequestDTO {
-    private Long fromCustomerId;
-    private Long toCustomerId;
+    private String toUsername;
     private Double amount;
 }

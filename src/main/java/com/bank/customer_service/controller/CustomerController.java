@@ -1,5 +1,6 @@
 package com.bank.customer_service.controller;
 
+import com.bank.customer_service.dto.BalanceDTO;
 import com.bank.customer_service.dto.CustomerResponseDTO;
 import com.bank.customer_service.entity.Customer;
 import com.bank.customer_service.service.CustomerService;
@@ -68,5 +69,15 @@ public class CustomerController {
         String username = authentication.getName();  // Extract logged-in username from JWT
         return ResponseEntity.ok(customerService.getMyProfile(username));
     }
+
+    @GetMapping("/me/balance")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<BalanceDTO> getMyBalance(Authentication authentication) {
+        String username = authentication.getName();
+        Double balance = customerService.getCustomerByUsername(username).getBalance();
+        return ResponseEntity.ok(new BalanceDTO(balance));
+    }
+
+
 
 }

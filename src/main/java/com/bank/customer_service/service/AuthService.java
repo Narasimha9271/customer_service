@@ -43,7 +43,7 @@ public class AuthService {
         customer.setPassword(passwordEncoder.encode(req.getPassword()));
         customer.setBranchId(req.getBranchId());
         customer.setAccountNumber(req.getAccountNumber());
-        customer.setBalance(req.getInitialBalance());
+        customer.setBalance(req.getBalance());
         customer.setAccountType(accountType);
 
         customerRepo.save(customer);

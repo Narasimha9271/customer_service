@@ -14,6 +14,6 @@ public class RegisterRequest {
     private String password;
     private String accountType;
     private String accountNumber;
-    private Double initialBalance;
+    private Double balance;
     private Long branchId;
 }

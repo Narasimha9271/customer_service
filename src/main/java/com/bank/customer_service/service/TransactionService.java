@@ -28,14 +28,19 @@ public class TransactionService {
     @Autowired
     private TransactionKafkaProducer kafkaProducer;
 
+    /**
+     * ✅ CREDIT money to the logged-in customer's account
+     */
     @Transactional
-    public String credit(CreditRequestDTO dto) {
-        Customer customer = customerRepository.findById(dto.getCustomerId())
+    public String credit(String username, CreditRequestDTO dto) {
+        Customer customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
+        // Add balance
         customer.setBalance(customer.getBalance() + dto.getAmount());
         customerRepository.save(customer);
 
+        // Record transaction
         Transaction transaction = new Transaction();
         transaction.setCustomer(customer);
         transaction.setCredit(dto.getAmount());
@@ -43,24 +48,35 @@ public class TransactionService {
         transaction.setTimestamp(LocalDateTime.now());
         transactionRepository.save(transaction);
 
-        TransactionEventDTO event = new TransactionEventDTO("CREDIT", customer.getAccountNumber(), dto.getAmount(), LocalDateTime.now().toString());
+        // Kafka event
+        TransactionEventDTO event = new TransactionEventDTO(
+                "CREDIT",
+                customer.getAccountNumber(),
+                dto.getAmount(),
+                LocalDateTime.now().toString()
+        );
         kafkaProducer.sendTransactionEvent(event);
 
         return "Amount credited successfully";
     }
 
+    /**
+     * ✅ DEBIT money from the logged-in customer's account
+     */
     @Transactional
-    public String debit(DebitRequestDTO dto) {
-        Customer customer = customerRepository.findById(dto.getCustomerId())
+    public String debit(String username, DebitRequestDTO dto) {
+        Customer customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
         if (customer.getBalance() < dto.getAmount()) {
             throw new RuntimeException("Insufficient balance");
         }
 
+        // Deduct balance
         customer.setBalance(customer.getBalance() - dto.getAmount());
         customerRepository.save(customer);
 
+        // Record transaction
         Transaction transaction = new Transaction();
         transaction.setCustomer(customer);
         transaction.setDebit(dto.getAmount());
@@ -68,47 +84,59 @@ public class TransactionService {
         transaction.setTimestamp(LocalDateTime.now());
         transactionRepository.save(transaction);
 
-        TransactionEventDTO event = new TransactionEventDTO("DEBIT", customer.getAccountNumber(), dto.getAmount(), LocalDateTime.now().toString());
+        // Kafka event
+        TransactionEventDTO event = new TransactionEventDTO(
+                "DEBIT",
+                customer.getAccountNumber(),
+                dto.getAmount(),
+                LocalDateTime.now().toString()
+        );
         kafkaProducer.sendTransactionEvent(event);
 
         return "Amount debited successfully";
     }
 
-
+    /**
+     * ✅ TRANSFER money from logged-in customer (sender) to another customer (receiver)
+     */
     @Transactional
-    public String transfer(TransferRequestDTO dto) {
-        Customer fromCustomer = customerRepository.findById(dto.getFromCustomerId())
+    public String transfer(String senderUsername, TransferRequestDTO dto) {
+        // Find sender by JWT username
+        Customer fromCustomer = customerRepository.findByUsername(senderUsername)
                 .orElseThrow(() -> new RuntimeException("Sender not found"));
 
-        Customer toCustomer = customerRepository.findById(dto.getToCustomerId())
+        // Find receiver by username from request body
+        Customer toCustomer = customerRepository.findByUsername(dto.getToUsername())
                 .orElseThrow(() -> new RuntimeException("Receiver not found"));
 
         if (fromCustomer.getBalance() < dto.getAmount()) {
             throw new RuntimeException("Insufficient balance");
         }
 
+        // Update balances
         fromCustomer.setBalance(fromCustomer.getBalance() - dto.getAmount());
         toCustomer.setBalance(toCustomer.getBalance() + dto.getAmount());
-
         customerRepository.save(fromCustomer);
         customerRepository.save(toCustomer);
 
+        // Create DEBIT transaction for sender
         Transaction debitTx = new Transaction();
         debitTx.setCustomer(fromCustomer);
         debitTx.setDebit(dto.getAmount());
-        debitTx.setType("DEBIT");
+        debitTx.setType("TRANSFER_DEBIT");
         debitTx.setTimestamp(LocalDateTime.now());
         transactionRepository.save(debitTx);
 
+        // Create CREDIT transaction for receiver
         Transaction creditTx = new Transaction();
         creditTx.setCustomer(toCustomer);
         creditTx.setCredit(dto.getAmount());
-        creditTx.setType("CREDIT");
+        creditTx.setType("TRANSFER_CREDIT");
         creditTx.setTimestamp(LocalDateTime.now());
-        creditTx.setRefTransaction(debitTx);
+        creditTx.setRefTransaction(debitTx); // optional link between transactions
         transactionRepository.save(creditTx);
 
-        // 🔴 Send event for DEBIT from sender
+        // Send Kafka events
         TransactionEventDTO debitEvent = new TransactionEventDTO(
                 "TRANSFER_DEBIT",
                 fromCustomer.getAccountNumber(),
@@ -117,7 +145,6 @@ public class TransactionService {
         );
         kafkaProducer.sendTransactionEvent(debitEvent);
 
-        // 🔵 Send event for CREDIT to receiver
         TransactionEventDTO creditEvent = new TransactionEventDTO(
                 "TRANSFER_CREDIT",
                 toCustomer.getAccountNumber(),
@@ -129,12 +156,17 @@ public class TransactionService {
         return "Transfer successful";
     }
 
-
+    /**
+     * ✅ Get transaction by ID
+     */
     public Transaction getTransactionById(Long id) {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
     }
 
+    /**
+     * ✅ ADMIN – Get all transactions
+     */
     public List<TransactionResponseDTO> getAllTransactions() {
         return transactionRepository.findAll()
                 .stream()
@@ -150,7 +182,9 @@ public class TransactionService {
                 .toList();
     }
 
-
+    /**
+     * ✅ Delete a transaction by ID (ADMIN only)
+     */
     @Transactional
     public void deleteTransaction(Long id) {
         if (!transactionRepository.existsById(id)) {
@@ -159,6 +193,9 @@ public class TransactionService {
         transactionRepository.deleteById(id);
     }
 
+    /**
+     * ✅ Get transactions for a specific username (CUSTOMER)
+     */
     public List<Transaction> getTransactionsByUsername(String username) {
         return transactionRepository.findByCustomer_Username(username);
     }

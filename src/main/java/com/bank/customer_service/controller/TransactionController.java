@@ -23,21 +23,25 @@ public class TransactionController {
 
     @PostMapping("/credit")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<String> credit(@RequestBody CreditRequestDTO dto) {
-        return ResponseEntity.ok(transactionService.credit(dto));
+    public ResponseEntity<String> credit(@RequestBody CreditRequestDTO dto, Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(transactionService.credit(username, dto));
     }
 
     @PostMapping("/debit")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<String> debit(@RequestBody DebitRequestDTO dto) {
-        return ResponseEntity.ok(transactionService.debit(dto));
+    public ResponseEntity<String> debit(@RequestBody DebitRequestDTO dto, Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(transactionService.debit(username, dto));
     }
 
     @PostMapping("/transfer")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<String> transfer(@RequestBody TransferRequestDTO dto) {
-        return ResponseEntity.ok(transactionService.transfer(dto));
+    public ResponseEntity<String> transfer(@RequestBody TransferRequestDTO dto, Authentication authentication) {
+        String username = authentication.getName(); // sender
+        return ResponseEntity.ok(transactionService.transfer(username, dto));
     }
+
 
     // ✅ ADMIN can see all transactions
     @GetMapping

@@ -16,5 +16,6 @@ public interface CustomerService {
     void deleteCustomer(Long id);
     CustomerResponseDTO updateMyProfile(String username, Customer updatedCustomer);
     CustomerResponseDTO getMyProfile(String username);
+    Customer getCustomerByUsername(String username);
 
 }

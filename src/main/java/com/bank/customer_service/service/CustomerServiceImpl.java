@@ -125,6 +125,13 @@ public class CustomerServiceImpl implements CustomerService {
         return mapToDTO(customer);
     }
 
+    @Override
+    public Customer getCustomerByUsername(String username) {
+        return customerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+    }
+
+
 
 
 

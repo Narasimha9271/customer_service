@@ -4,6 +4,5 @@ import lombok.Data;
 
 @Data
 public class DebitRequestDTO {
-    private Long customerId;
     private Double amount;
 }
