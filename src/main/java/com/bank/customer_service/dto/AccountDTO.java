@@ -12,4 +12,5 @@ public class AccountDTO {
     private String accountNumber;
     private String type;       // e.g., Saving, Current
     private Double minBalance;
+    private String status="ACTIVE";     // ✅ Added for response visibility (optional for POST)
 }

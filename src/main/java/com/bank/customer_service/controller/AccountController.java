@@ -5,12 +5,14 @@ import com.bank.customer_service.entity.Account;
 import com.bank.customer_service.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/accounts")
+@RequestMapping("/api/accounts")
 @RequiredArgsConstructor
 public class AccountController {
 
@@ -22,24 +24,28 @@ public class AccountController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")  // ✅ Only ADMIN can get all accounts
     public ResponseEntity<List<Account>> getAllAccounts() {
         return ResponseEntity.ok(accountService.getAllAccounts());
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")  // ✅ Only ADMIN can create accounts
     public ResponseEntity<Account> createAccount(@RequestBody AccountDTO dto) {
         return ResponseEntity.ok(accountService.createAccount(dto));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")  // ✅ Only ADMIN can update accounts
     public ResponseEntity<Account> updateAccount(@PathVariable Long id, @RequestBody AccountDTO dto) {
         return ResponseEntity.ok(accountService.updateAccount(id, dto));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")  // ✅ Only ADMIN can soft-delete
     public ResponseEntity<String> deleteAccount(@PathVariable Long id) {
         accountService.deleteAccount(id);
-        return ResponseEntity.ok("Account deleted successfully");
+        return ResponseEntity.ok("Account status changed to CLOSED");
     }
 
     @GetMapping("/number/{accountNumber}")
@@ -49,4 +55,11 @@ public class AccountController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ✅ NEW ENDPOINT for Customers
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<Account> getMyAccount(Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(accountService.getMyAccount(username));
+    }
 }

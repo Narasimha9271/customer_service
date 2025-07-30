@@ -34,39 +34,54 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // ✅ Disable CSRF for API usage (JWT handles security)
                 .csrf(csrf -> csrf.disable())
+                // ✅ Allow CORS for frontend
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-
-                        // ✅ Allow login/register token generation
+                        // ✅ Public endpoints (no authentication required)
                         .requestMatchers("/auth/login", "/auth/register", "/auth/generateToken").permitAll()
 
-                        // ✅ ADMIN can view all customers, CUSTOMER can only view their own data
-                        .requestMatchers(HttpMethod.GET, "/api/customers/**").hasAnyRole("ADMIN", "CUSTOMER")
+                        // ✅ Accounts (ADMIN only)
+                        .requestMatchers(HttpMethod.GET, "/api/accounts").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/accounts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/accounts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/accounts/**").hasRole("ADMIN")
 
-                        // ✅ ADMIN can view all transactions, CUSTOMER can only view their own
+                        // ✅ Allow customers to view their own account
+                        .requestMatchers(HttpMethod.GET, "/api/accounts/me").hasRole("CUSTOMER")
+
+                        // ✅ Customers & admins for GET requests
+                        .requestMatchers(HttpMethod.GET, "/api/customers/**").hasAnyRole("ADMIN", "CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/transactions/**").hasAnyRole("ADMIN", "CUSTOMER")
 
-                        // ✅ Allow only ADMIN to create/update/delete customers (optional)
+                        // ✅ Admin only for creating customers
                         .requestMatchers(HttpMethod.POST, "/api/customers/**").hasRole("ADMIN")
+
+                        // 🔹 FIX: Allow CUSTOMERS to update their own profile FIRST
+                        .requestMatchers(HttpMethod.PUT, "/api/customers/me").hasRole("CUSTOMER")
+
+                        // 🔹 ADMIN can update all other customer records
                         .requestMatchers(HttpMethod.PUT, "/api/customers/**").hasRole("ADMIN")
+
+                        // ✅ ADMIN can delete customers
                         .requestMatchers(HttpMethod.DELETE, "/api/customers/**").hasRole("ADMIN")
 
-                        // ✅ Any other request should be authenticated
+                        // ✅ All remaining requests must be authenticated
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                // ✅ Stateless session (JWT-based)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // ✅ Authentication provider setup
                 .authenticationProvider(authenticationProvider())
+                // ✅ Add JWT filter before username-password auth
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -86,7 +101,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // ✅ Frontend URL
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // ✅ Allow React/Vite frontend
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

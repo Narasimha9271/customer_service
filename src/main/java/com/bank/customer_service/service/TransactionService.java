@@ -29,12 +29,24 @@ public class TransactionService {
     private TransactionKafkaProducer kafkaProducer;
 
     /**
+     * ✅ Helper method to check if account is closed
+     */
+    private void validateAccountStatus(Customer customer) {
+        if (customer.getAccountType() != null &&
+                "CLOSED".equalsIgnoreCase(customer.getAccountType().getStatus())) {
+            throw new RuntimeException("Account is closed. No transactions allowed.");
+        }
+    }
+
+    /**
      * ✅ CREDIT money to the logged-in customer's account
      */
     @Transactional
     public String credit(String username, CreditRequestDTO dto) {
         Customer customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        validateAccountStatus(customer); // 🚨 check before proceeding
 
         // Add balance
         customer.setBalance(customer.getBalance() + dto.getAmount());
@@ -67,6 +79,8 @@ public class TransactionService {
     public String debit(String username, DebitRequestDTO dto) {
         Customer customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        validateAccountStatus(customer); // 🚨 check before proceeding
 
         if (customer.getBalance() < dto.getAmount()) {
             throw new RuntimeException("Insufficient balance");
@@ -108,6 +122,10 @@ public class TransactionService {
         // Find receiver by username from request body
         Customer toCustomer = customerRepository.findByUsername(dto.getToUsername())
                 .orElseThrow(() -> new RuntimeException("Receiver not found"));
+
+        // 🚨 Check both accounts before proceeding
+        validateAccountStatus(fromCustomer);
+        validateAccountStatus(toCustomer);
 
         if (fromCustomer.getBalance() < dto.getAmount()) {
             throw new RuntimeException("Insufficient balance");

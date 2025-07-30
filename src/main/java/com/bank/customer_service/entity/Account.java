@@ -25,4 +25,8 @@ public class Account {
 
     @Column(name = "min_balance")
     private Double minBalance;
+
+    @Column(name = "status")
+    private String status = "ACTIVE"; // ACTIVE or CLOSED
+
 }
