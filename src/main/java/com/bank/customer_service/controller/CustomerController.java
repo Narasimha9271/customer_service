@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -62,6 +63,29 @@ public class CustomerController {
         String username = authentication.getName(); // Extract logged-in username from JWT
         return ResponseEntity.ok(customerService.updateMyProfile(username, updatedCustomer));
     }
+
+    // ✅ Change Email
+    @PutMapping("/me/change-email")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<String> changeEmail(
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+        String username = authentication.getName();
+        customerService.changeEmail(username, request.get("email"));
+        return ResponseEntity.ok("Email updated successfully");
+    }
+
+    // ✅ Change Password
+    @PutMapping("/me/change-password")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<String> changePassword(
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+        String username = authentication.getName();
+        customerService.changePassword(username, request.get("oldPassword"), request.get("newPassword"));
+        return ResponseEntity.ok("Password updated successfully");
+    }
+
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('CUSTOMER')")

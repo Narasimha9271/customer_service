@@ -17,5 +17,6 @@ public interface CustomerService {
     CustomerResponseDTO updateMyProfile(String username, Customer updatedCustomer);
     CustomerResponseDTO getMyProfile(String username);
     Customer getCustomerByUsername(String username);
-
+    void changeEmail(String username, String newEmail);
+    void changePassword(String username, String oldPassword, String newPassword);
 }

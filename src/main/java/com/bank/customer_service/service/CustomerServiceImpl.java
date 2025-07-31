@@ -84,10 +84,6 @@ public class CustomerServiceImpl implements CustomerService {
         existing.setEmail(updatedCustomer.getEmail());
         existing.setPassword(passwordEncoder.encode(updatedCustomer.getPassword()));
 
-        // Optional: encode and update password if provided
-//        if (updatedCustomer.getPassword() != null && !updatedCustomer.getPassword().isBlank()) {
-//            existing.setPassword(passwordEncoder.encode(updatedCustomer.getPassword()));
-//        }
 
         Customer saved = customerRepository.save(existing);
         return mapToDTO(saved);
@@ -131,6 +127,26 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
     }
 
+    public void changeEmail(String username, String newEmail) {
+        Customer customer = customerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        customer.setEmail(newEmail);
+        customerRepository.save(customer);
+    }
+
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        Customer customer = customerRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        if (!passwordEncoder.matches(oldPassword, customer.getPassword())) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+
+        customer.setPassword(passwordEncoder.encode(newPassword));
+        customerRepository.save(customer);
+    }
+
+
 
 
 
@@ -138,8 +154,16 @@ public class CustomerServiceImpl implements CustomerService {
     private CustomerResponseDTO mapToDTO(Customer customer) {
         CustomerResponseDTO dto = new CustomerResponseDTO();
         dto.setId(customer.getId());
-        dto.setUsername(customer.getUsername());
+        dto.setName(customer.getName());
         dto.setEmail(customer.getEmail());
+        dto.setAadhaar(customer.getAadhaar());
+        dto.setPan(customer.getPan());
+        dto.setGender(customer.getGender());
+        dto.setUsername(customer.getUsername());
+        dto.setAccountNumber(customer.getAccountNumber());
+        dto.setBalance(customer.getBalance());
+        dto.setBranchId(customer.getBranchId());
         return dto;
     }
+
 }

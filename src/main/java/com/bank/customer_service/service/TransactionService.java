@@ -46,6 +46,11 @@ public class TransactionService {
         Customer customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
+        if (dto.getAmount() <= 0) {
+            throw new RuntimeException("Amount must be greater than zero");
+        }
+
+
         validateAccountStatus(customer); // 🚨 check before proceeding
 
         // Add balance
@@ -79,6 +84,11 @@ public class TransactionService {
     public String debit(String username, DebitRequestDTO dto) {
         Customer customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        if (dto.getAmount() <= 0) {
+            throw new RuntimeException("Amount must be greater than zero");
+        }
+
 
         validateAccountStatus(customer); // 🚨 check before proceeding
 
@@ -119,9 +129,19 @@ public class TransactionService {
         Customer fromCustomer = customerRepository.findByUsername(senderUsername)
                 .orElseThrow(() -> new RuntimeException("Sender not found"));
 
+        if (dto.getAmount() <= 0) {
+            throw new RuntimeException("Amount must be greater than zero");
+        }
+
+
         // Find receiver by username from request body
         Customer toCustomer = customerRepository.findByUsername(dto.getToUsername())
                 .orElseThrow(() -> new RuntimeException("Receiver not found"));
+
+        if (senderUsername.equals(dto.getToUsername())) {
+            throw new RuntimeException("You cannot transfer money to yourself");
+        }
+
 
         // 🚨 Check both accounts before proceeding
         validateAccountStatus(fromCustomer);

@@ -1,5 +1,6 @@
 package com.bank.customer_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -50,6 +51,7 @@ public class Customer {
     private Account accountType;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Transaction> transactions;
     private String role = "CUSTOMER";
 }

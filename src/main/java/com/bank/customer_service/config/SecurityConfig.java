@@ -53,15 +53,22 @@ public class SecurityConfig {
 
                         // ✅ Customers & admins for GET requests
                         .requestMatchers(HttpMethod.GET, "/api/customers/**").hasAnyRole("ADMIN", "CUSTOMER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/transactions/me").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/transactions/**").hasAnyRole("ADMIN", "CUSTOMER")
 
                         // ✅ Admin only for creating customers
                         .requestMatchers(HttpMethod.POST, "/api/customers/**").hasRole("ADMIN")
 
-                        // 🔹 FIX: Allow CUSTOMERS to update their own profile FIRST
-                        .requestMatchers(HttpMethod.PUT, "/api/customers/me").hasRole("CUSTOMER")
+                                // ✅ Customers can update their own email & password
+                                .requestMatchers(HttpMethod.PUT, "/api/customers/me/change-email").hasRole("CUSTOMER")
+                                .requestMatchers(HttpMethod.PUT, "/api/customers/me/change-password").hasRole("CUSTOMER")
 
-                        // 🔹 ADMIN can update all other customer records
+// ✅ Customers can update their basic info
+                                .requestMatchers(HttpMethod.PUT, "/api/customers/me").hasRole("CUSTOMER")
+
+
+                                // 🔹 ADMIN can update all other customer records
                         .requestMatchers(HttpMethod.PUT, "/api/customers/**").hasRole("ADMIN")
 
                         // ✅ ADMIN can delete customers
