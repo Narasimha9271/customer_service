@@ -17,7 +17,7 @@ public class Transaction {
     private Long id;
 
     @Column(nullable = false)
-    private String type; // CREDIT or DEBIT
+    private String type;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -31,5 +31,5 @@ public class Transaction {
 
     @OneToOne
     @JoinColumn(name = "ref_id")
-    private Transaction refTransaction; // For linked transfers
+    private Transaction refTransaction;
 }

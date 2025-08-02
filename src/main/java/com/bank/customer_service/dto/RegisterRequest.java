@@ -7,7 +7,7 @@ public class RegisterRequest {
     private String name;
     private String email;
     private String aadhaar;
-    private String dob; // will be parsed
+    private String dob;
     private String pan;
     private String gender;
     private String username;

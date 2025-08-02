@@ -20,35 +20,30 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    // 🔹 Only ADMIN can view all customers
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
-    // 🔹 Only ADMIN can view a specific customer by ID
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDTO> getCustomer(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
-    // 🔹 Only ADMIN can manually create customers
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDTO> createCustomer(@RequestBody Customer customer) {
         return ResponseEntity.ok(customerService.createCustomer(customer));
     }
 
-    // 🔹 Only ADMIN can update any customer
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponseDTO> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
         return ResponseEntity.ok(customerService.updateCustomer(id, customer));
     }
 
-    // 🔹 Only ADMIN can delete a customer
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteCustomer(@PathVariable Long id) {
@@ -56,15 +51,13 @@ public class CustomerController {
         return ResponseEntity.ok("Customer deleted successfully.");
     }
 
-    // 🔹 NEW: Customers can edit their own profile
     @PutMapping("/me")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<CustomerResponseDTO> updateMyProfile(@RequestBody Customer updatedCustomer, Authentication authentication) {
-        String username = authentication.getName(); // Extract logged-in username from JWT
+        String username = authentication.getName();
         return ResponseEntity.ok(customerService.updateMyProfile(username, updatedCustomer));
     }
 
-    // ✅ Change Email
     @PutMapping("/me/change-email")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<String> changeEmail(
@@ -75,7 +68,6 @@ public class CustomerController {
         return ResponseEntity.ok("Email updated successfully");
     }
 
-    // ✅ Change Password
     @PutMapping("/me/change-password")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<String> changePassword(

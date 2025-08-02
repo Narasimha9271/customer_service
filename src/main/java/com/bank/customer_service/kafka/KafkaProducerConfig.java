@@ -35,7 +35,7 @@ public class KafkaProducerConfig {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class TransactionEventDTO {
-        private String transactionType; // CREDIT / DEBIT / TRANSFER
+        private String transactionType;
         private String accountNumber;
         private double amount;
         private String timestamp;

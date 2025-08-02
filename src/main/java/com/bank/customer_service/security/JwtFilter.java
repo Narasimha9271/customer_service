@@ -35,24 +35,20 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // ✅ Extract role from token
             String role = jwtService.extractRole(token);
 
             UserDetails userDetails;
 
             if ("ADMIN".equals(role)) {
-                // ✅ If ADMIN, skip DB lookup and create a dummy admin user
                 userDetails = User.builder()
                         .username(username)
-                        .password("") // no password check needed here
+                        .password("")
                         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
                         .build();
             } else {
-                // ✅ If CUSTOMER, load user from DB
                 userDetails = userDetailsService.loadUserByUsername(username);
             }
 
-            // ✅ Validate token
             if (jwtService.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

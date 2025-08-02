@@ -38,12 +38,11 @@ public class TransactionController {
     @PostMapping("/transfer")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<String> transfer(@RequestBody TransferRequestDTO dto, Authentication authentication) {
-        String username = authentication.getName(); // sender
+        String username = authentication.getName();
         return ResponseEntity.ok(transactionService.transfer(username, dto));
     }
 
 
-    // ✅ ADMIN can see all transactions
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TransactionResponseDTO>> getAllTransactions() {
@@ -51,7 +50,6 @@ public class TransactionController {
     }
 
 
-    // ✅ Customers see only their transactions, ADMIN can see anyone’s
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<Transaction> getTransaction(@PathVariable Long id, Authentication authentication) {
@@ -68,7 +66,6 @@ public class TransactionController {
         return ResponseEntity.ok(tx);
     }
 
-    // ✅ Only ADMIN can delete
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteTransaction(@PathVariable Long id) {

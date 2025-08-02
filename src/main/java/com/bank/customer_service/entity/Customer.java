@@ -39,7 +39,7 @@ public class Customer {
     private String password;
 
     @Column(name = "branch_id")
-    private Long branchId; // Reference to external Branch (Admin Service)
+    private Long branchId;
 
     @Column(name = "account_number", unique = true, nullable = false)
     private String accountNumber;

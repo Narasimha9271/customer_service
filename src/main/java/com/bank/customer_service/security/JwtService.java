@@ -1,7 +1,6 @@
 package com.bank.customer_service.security;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -48,7 +47,6 @@ public class JwtService {
             Claims claims = extractAllClaims(token);
             String username = claims.getSubject();
 
-            // ✅ Just check username matches and token is not expired
             return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
         } catch (JwtException e) {
             return false;

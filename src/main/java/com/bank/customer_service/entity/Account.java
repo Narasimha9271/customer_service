@@ -21,12 +21,12 @@ public class Account {
 
 
     @Column(name = "type", nullable = false, unique = true)
-    private String type; // e.g., Saving, Current
+    private String type;
 
     @Column(name = "min_balance")
     private Double minBalance;
 
     @Column(name = "status")
-    private String status = "ACTIVE"; // ACTIVE or CLOSED
+    private String status = "ACTIVE";
 
 }
